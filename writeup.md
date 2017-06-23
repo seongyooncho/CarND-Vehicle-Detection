@@ -13,7 +13,7 @@ The goals / steps of this project are the following:
 [image1]: ./output_images/00_car_not_car.png
 [image2]: ./output_images/01_car_not_car_hog.png
 [image3]: ./output_images/03_window.png
-[image4]: ./output_images/02_results.png
+[image4]: ./output_images/02_result.png
 [video1]: ./project_video.mp4
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
