@@ -1,9 +1,4 @@
-##Writeup Template
-###You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
-
----
-
-**Vehicle Detection Project**
+## Vehicle Detection Project
 
 The goals / steps of this project are the following:
 
@@ -16,7 +11,7 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 [image1]: ./output_images/00_car_not_car.png
-[image2]: ./examples/HOG_example.jpg
+[image2]: ./output_images/01_car_not_car_hog.png
 [image3]: ./examples/sliding_windows.jpg
 [image4]: ./examples/sliding_window.jpg
 [image5]: ./examples/bboxes_and_heat.png
@@ -38,7 +33,7 @@ You're reading it!
 
 #### 1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
-The code for this step is contained in the first code cell of the IPython notebook (or in lines # through # of the file called `some_file.py`).  
+The code for this step is contained in the `extract_features()` and `get_hog_features()` functions (lines #14 through #31 and #51 through #99 of the file called `lesson_functions.py`).  
 
 I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
@@ -53,11 +48,17 @@ Here is an example using the `YCrCb` color space and HOG parameters of `orientat
 
 ####2. Explain how you settled on your final choice of HOG parameters.
 
-I tried various combinations of parameters and...
+I tried various combinations of parameters and colorspaces.
 
 ####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-I trained a linear SVM using...
+The code for this step is contained in the `save_svc.py` file. 
+Here's how I did.
+1. I've extracted HOG features
+1. Normalized with `StandardScaler`
+1. Randomize & split set into train & test set with `train_test_split` 
+1. Train with `LinearSVC`
+1. Save to trained svc to `svc_pickle.p`
 
 ###Sliding Window Search
 

@@ -14,8 +14,8 @@ def get_image_list():
 
   return cars, notcars
 
-def export_images(images, titles, filename, columns=2, cmap=None):
-  fig = plt.figure()
+def export_images(images, titles, filename, columns=2, cmap=None, figsize=None):
+  fig = plt.figure(figsize=figsize)
 
   rows = (len(images) - 1) // columns + 1
   

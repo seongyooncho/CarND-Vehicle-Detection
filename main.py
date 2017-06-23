@@ -1,51 +1,75 @@
 import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import numpy as np
+import pickle
 import cv2
+import os.path
+from scipy.ndimage.measurements import label
+from lesson_functions import *
 from utils import *
-from hog import *
 
-# Get list of filename for images
-cars, notcars = get_image_list()
+if os.path.isfile("svc_pickle.p") == False :
+  from save_svc import *
+  save_svc()
 
-# Pick indexes for car / not-car examples
-car_ind = np.random.randint(0, len(cars))
-notcar_ind = np.random.randint(0, len(notcars))
+dist_pickle = pickle.load( open("svc_pickle.p", "rb" ) )
+svc = dist_pickle["svc"]
+X_scaler = dist_pickle["scaler"]
+orient = dist_pickle["orient"]
+pix_per_cell = dist_pickle["pix_per_cell"]
+cell_per_block = dist_pickle["cell_per_block"]
+spatial_size = dist_pickle["spatial_size"]
+hist_bins = dist_pickle["hist_bins"]
 
-# Load images
-car_image = mpimg.imread(cars[car_ind])
-notcar_image = mpimg.imread(notcars[notcar_ind])
+def process_img(img):
+  ystart = 400
+  ystop = 656
+  scale = 1.5
 
-export_images([car_image, notcar_image], ['Car', 'Not-Car'], 
-    '00_car_not_car.png')
+  windows_img, box_list = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
 
-# Define HOG parameters
-orient = 9
-pix_per_cell = 8
-cell_per_block = 2
+  heat = np.zeros_like(img[:,:,0]).astype(np.float)
+  heat = add_heat(heat,box_list)
+  heat = apply_threshold(heat,1)
+  heatmap_img = np.clip(heat, 0, 255)
+  labels = label(heatmap_img)
+  cars_img = draw_labeled_bboxes(np.copy(img), labels)
+  return windows_img, heatmap_img, cars_img
 
-# Convert to gray 
-car_gray = cv2.cvtColor(car_image, cv2.COLOR_RGB2GRAY)
-notcar_gray = cv2.cvtColor(notcar_image, cv2.COLOR_RGB2GRAY)
+out_images = []
+out_titles = []
+images = glob.glob('test_images/test*.jpg')
+for filename in images:
+  img = mpimg.imread(filename)
 
-## Call our function with vis=True to see an image output
-car_features, car_hog_image = get_hog_features(car_gray, orient, 
-    pix_per_cell, cell_per_block, 
-    vis=True, feature_vec=False)
-notcar_features, notcar_hog_image = get_hog_features(notcar_gray, orient, 
-    pix_per_cell, cell_per_block, 
-    vis=True, feature_vec=False)
+  windows_img, heatmap_img, cars_img = process_img(img)
 
-export_images([car_gray, car_hog_image, notcar_gray, notcar_hog_image], 
-    ['Car', 'Car Hog', 'Not-Car', 'Not-Car Hog'], 
-    '01_car_not_car_hog.png', columns=4, cmap='gray')
+  out_images.append(img)
+  out_images.append(windows_img)
+  out_images.append(heatmap_img)
+  out_images.append(cars_img)
 
-## Plot the examples
-#fig = plt.figure()
-#plt.subplot(121)
-#plt.imshow(image, cmap='gray')
-#plt.title('Example Car Image')
-#plt.subplot(122)
-#plt.imshow(hog_image, cmap='gray')
-#plt.title('HOG Visualization')
-#
-#plt.savefig('a.png')
+  out_titles.append(filename + '- Original')
+  out_titles.append(filename + '- Windows')
+  out_titles.append(filename + '- Heat Map')
+  out_titles.append(filename + '- Car Positions')
+
+export_images(out_images, out_titles, '03_out.png', figsize=(24,24), columns=4)
+
+def pipeline(img):
+  windows_img, heatmap_img, cars_img = process_img(img)
+  return cars_img
+  
+# Import everything needed to edit/save/watch video clips
+from moviepy.editor import VideoFileClip
+from IPython.display import HTML
+
+video_output = 'test_video_output.mp4'
+clip1 = VideoFileClip("test_video.mp4")
+output_clip = clip1.fl_image(pipeline)
+output_clip.write_videofile(video_output, audio=False)
+
+video_output = 'project_video_output.mp4'
+clip1 = VideoFileClip("project_video.mp4")
+output_clip = clip1.fl_image(pipeline)
+output_clip.write_videofile(video_output, audio=False)
