@@ -70,8 +70,11 @@ Here's how I did.
 ####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
 The code for this step is contained in the `find_cars()` function of `lesson_functions.py` file. 
-I have followed exact setup used in lessons.
-The scale is 1.5. Pix per cell is 8 and cell per block is 2, it means 75% of overlaps.
+~~I have followed exact setup used in lessons.~~
+~~The scale is 1.5. Pix per cell is 8 and cell per block is 2, it means 75% of overlaps.~~
+
+**Following the suggestions from review, I used multiple scale (1.0, 1.5, and 2.0).
+I've also reduced cell per block to 1, so the overlap is now 87.5%.**
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
@@ -91,6 +94,8 @@ Here's a [link to my video result](./project_video_output.mp4)
 I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
 
 Here's an example result showing the heatmap from a series of frames of video, and the bounding boxes then overlaid on the example images:
+
+**Following the suggestion from review, I have used `collections.deque` to accumulate heatmap.**
 
 ### Here are six frames and their corresponding heatmaps, column 3, and the resulting bounding boxes are drawn onto the last frame in the series, column 4: 
 ![alt text][image4]

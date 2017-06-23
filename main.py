@@ -5,6 +5,7 @@ import pickle
 import cv2
 import os.path
 from scipy.ndimage.measurements import label
+from collections import deque
 from lesson_functions import *
 from utils import *
 
@@ -21,18 +22,41 @@ cell_per_block = dist_pickle["cell_per_block"]
 spatial_size = dist_pickle["spatial_size"]
 hist_bins = dist_pickle["hist_bins"]
 
+history = deque(maxlen = 8)
+
 def process_img(img):
   ystart = 400
   ystop = 656
-  scale = 1.5
+  
+  scale = 1.0
+  windows_img, box_list_10 = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
 
-  windows_img, box_list = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+  scale = 1.5
+  windows_img, box_list_15 = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+
+  scale = 2.0
+  windows_img, box_list_20 = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+
+  box_list = []
+  for b in box_list_10:
+    box_list.append(b)
+  for b in box_list_15:
+    box_list.append(b)
+  for b in box_list_20:
+    box_list.append(b)
 
   heat = np.zeros_like(img[:,:,0]).astype(np.float)
   heat = add_heat(heat,box_list)
   heat = apply_threshold(heat,1)
   heatmap_img = np.clip(heat, 0, 255)
-  labels = label(heatmap_img)
+
+  history.append(heatmap_img)
+  avg_heatmap_img = np.zeros_like(heatmap_img)
+  for heatmap_history in history:
+    avg_heatmap_img = avg_heatmap_img + heatmap_history
+  avg_heatmap_img = avg_heatmap_img / len(history)
+
+  labels = label(avg_heatmap_img)
   cars_img = draw_labeled_bboxes(np.copy(img), labels)
   return windows_img, heatmap_img, cars_img
 
@@ -42,6 +66,7 @@ images = glob.glob('test_images/test*.jpg')
 for filename in images:
   img = mpimg.imread(filename)
 
+  history = deque(maxlen = 8)
   windows_img, heatmap_img, cars_img = process_img(img)
 
   out_images.append(img)
@@ -64,11 +89,13 @@ def pipeline(img):
 from moviepy.editor import VideoFileClip
 from IPython.display import HTML
 
+history = deque(maxlen = 8)
 video_output = 'test_video_output.mp4'
 clip1 = VideoFileClip("test_video.mp4")
 output_clip = clip1.fl_image(pipeline)
 output_clip.write_videofile(video_output, audio=False)
 
+history = deque(maxlen = 8)
 video_output = 'project_video_output.mp4'
 clip1 = VideoFileClip("project_video.mp4")
 output_clip = clip1.fl_image(pipeline)
