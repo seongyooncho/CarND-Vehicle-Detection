@@ -54,7 +54,7 @@ for filename in images:
   out_titles.append(filename + '- Heat Map')
   out_titles.append(filename + '- Car Positions')
 
-export_images(out_images, out_titles, '03_out.png', figsize=(24,24), columns=4)
+export_images(out_images, out_titles, '02_result.png', figsize=(24,24), columns=4)
 
 def pipeline(img):
   windows_img, heatmap_img, cars_img = process_img(img)

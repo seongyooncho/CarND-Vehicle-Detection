@@ -12,11 +12,8 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 [image1]: ./output_images/00_car_not_car.png
 [image2]: ./output_images/01_car_not_car_hog.png
-[image3]: ./examples/sliding_windows.jpg
-[image4]: ./examples/sliding_window.jpg
-[image5]: ./examples/bboxes_and_heat.png
-[image6]: ./examples/labels_map.png
-[image7]: ./examples/output_bboxes.png
+[image3]: ./output_images/03_window.png
+[image4]: ./output_images/02_results.png
 [video1]: ./project_video.mp4
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
@@ -33,28 +30,36 @@ You're reading it!
 
 #### 1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
-The code for this step is contained in the `extract_features()` and `get_hog_features()` functions (lines #14 through #31 and #51 through #99 of the file called `lesson_functions.py`).  
+The code for this step is contained in the lines through 12 to 37 of `save_svc.py`. The actual working code is in `get_hog_features()` functions (lines #14 through #31 and #51 through #99 of the file called `lesson_functions.py`).  
 
-I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
-
-![alt text][image1]
+I started by reading in all the `vehicle` and `non-vehicle` images. The code for this is contained in the `get_image_list()` function of `utils.py`
 
 I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
 
-Here is an example using the `YCrCb` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
-
+Here is an example using the `RGB` color space and HOG parameters of `orientations=9`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
 
 ![alt text][image2]
 
 ####2. Explain how you settled on your final choice of HOG parameters.
 
-I tried various combinations of parameters and colorspaces.
+I tried several combinations of colorspaces.
+Here are the test accuracies varied with colorspaces.
+
+| Color Space | Test Accuracy of SVC |
+| --- | --- |
+| RGB | 0.9797 |
+| HSV | 0.9918 |
+| YCrCb | 0.993 |
+
+I've chose to follow setup from lessons, which is Colorspace=YCrCb, orient=9, pix_per_cell=8, cell_per_block=2. Because it shows quite good results by itself and it doesn't seem to get better significantly with changing parameters.
 
 ####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-The code for this step is contained in the `save_svc.py` file. 
+The code for this step is contained in the lines through 39 to 79 of `save_svc.py` file. 
+I've trained SVC with spatial_features, hist_features, and hog_features.
+
 Here's how I did.
-1. I've extracted HOG features
+1. I've extracted Features, (hog, spatial, and hist)
 1. Normalized with `StandardScaler`
 1. Randomize & split set into train & test set with `train_test_split` 
 1. Train with `LinearSVC`
@@ -64,40 +69,31 @@ Here's how I did.
 
 ####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-I decided to search random window positions at random scales all over the image and came up with this (ok just kidding I didn't actually ;):
-
-![alt text][image3]
+The code for this step is contained in the `find_cars()` function of `lesson_functions.py` file. 
+I have followed exact setup used in lessons.
+The scale is 1.5. Pix per cell is 8 and cell per block is 2, it means 75% of overlaps.
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
 Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
 
-![alt text][image4]
+![alt text][image3]
 ---
 
 ### Video Implementation
 
 ####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./project_video_output.mp4)
 
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
 I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
 
-Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
+Here's an example result showing the heatmap from a series of frames of video, and the bounding boxes then overlaid on the example images:
 
-### Here are six frames and their corresponding heatmaps:
-
-![alt text][image5]
-
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
-![alt text][image6]
-
-### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7]
-
-
+### Here are six frames and their corresponding heatmaps, column 3, and the resulting bounding boxes are drawn onto the last frame in the series, column 4: 
+![alt text][image4]
 
 ---
 
@@ -105,5 +101,6 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+The result can be more smooth if I track the result of previous several frames and decide if its valid or not.
+The speed of pipeline seems acceptable, 5 fps in my laptop (2013 rMBP 15"). 
 
